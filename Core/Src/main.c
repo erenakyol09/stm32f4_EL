@@ -117,7 +117,6 @@ void command_A(void)
 			{
 				HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Version Number: STM32F407VG\n"),1);		
 				HAL_Delay(delay);
-				//sendPacket'taki tüm paketler crc degiskeninde toplanacak 				
 			}
 				crc = crc + sendPacket[i]; 
 	}
