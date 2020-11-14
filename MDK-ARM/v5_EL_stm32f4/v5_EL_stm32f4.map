@@ -480,7 +480,7 @@ Removing Unused input sections from the image.
     Removing main.o(.revsh_text), (4 bytes).
     Removing main.o(.rrx_text), (6 bytes).
     Removing main.o(i.Error_Handler), (2 bytes).
-    Removing main.o(i.command_A), (240 bytes).
+    Removing main.o(i.command_A), (280 bytes).
     Removing stm32f4xx_it.o(.rev16_text), (4 bytes).
     Removing stm32f4xx_it.o(.revsh_text), (4 bytes).
     Removing stm32f4xx_it.o(.rrx_text), (6 bytes).
@@ -731,7 +731,7 @@ Removing Unused input sections from the image.
     Removing cdrcmple.o(.text), (48 bytes).
     Removing depilogue.o(.text), (186 bytes).
 
-255 unused section(s) (total 15146 bytes) removed from the image.
+255 unused section(s) (total 15186 bytes) removed from the image.
 
 ==============================================================================
 
@@ -904,8 +904,8 @@ Image Symbol Table
     .data                                    0x20000000   Section       16  main.o(.data)
     .data                                    0x20000010   Section       12  stm32f4xx_hal.o(.data)
     .data                                    0x2000001c   Section        4  system_stm32f4xx.o(.data)
-    .bss                                     0x20000020   Section      104  main.o(.bss)
-    STACK                                    0x20000088   Section     1024  startup_stm32f407xx.o(STACK)
+    .bss                                     0x20000020   Section      164  main.o(.bss)
+    STACK                                    0x200000c8   Section     1024  startup_stm32f407xx.o(STACK)
 
     Global Symbols
 
@@ -1125,9 +1125,9 @@ Image Symbol Table
     uwTick                                   0x20000018   Data           4  stm32f4xx_hal.o(.data)
     SystemCoreClock                          0x2000001c   Data           4  system_stm32f4xx.o(.data)
     huart3                                   0x20000020   Data          64  main.o(.bss)
-    Tx_Buffer                                0x20000060   Data          20  main.o(.bss)
-    Rx_Buffer                                0x20000074   Data          20  main.o(.bss)
-    __initial_sp                             0x20000488   Data           0  startup_stm32f407xx.o(STACK)
+    Tx_Buffer                                0x20000060   Data          50  main.o(.bss)
+    Rx_Buffer                                0x20000092   Data          50  main.o(.bss)
+    __initial_sp                             0x200004c8   Data           0  startup_stm32f407xx.o(STACK)
 
 
 
@@ -1220,15 +1220,16 @@ Memory Map of the image
     **** No section assigned to this execution region ****
 
 
-    Execution Region RW_IRAM1 (Exec base: 0x20000000, Load base: 0x08001590, Size: 0x00000488, Max: 0x00020000, ABSOLUTE)
+    Execution Region RW_IRAM1 (Exec base: 0x20000000, Load base: 0x08001590, Size: 0x000004c8, Max: 0x00020000, ABSOLUTE)
 
     Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
 
     0x20000000   0x08001590   0x00000010   Data   RW           20    .data               main.o
     0x20000010   0x080015a0   0x0000000c   Data   RW         1545    .data               stm32f4xx_hal.o
     0x2000001c   0x080015ac   0x00000004   Data   RW         1780    .data               system_stm32f4xx.o
-    0x20000020        -       0x00000068   Zero   RW           19    .bss                main.o
-    0x20000088        -       0x00000400   Zero   RW            1    STACK               startup_stm32f407xx.o
+    0x20000020        -       0x000000a4   Zero   RW           19    .bss                main.o
+    0x200000c4   0x080015b0   0x00000004   PAD
+    0x200000c8        -       0x00000400   Zero   RW            1    STACK               startup_stm32f407xx.o
 
 
 ==============================================================================
@@ -1238,7 +1239,7 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Object Name
 
-       608         58          0         16        104     658384   main.o
+       608         58          0         16        164     658388   main.o
         36          8        392          0       1024        828   startup_stm32f407xx.o
        180         28          0         12          0       9337   stm32f4xx_hal.o
        172         14          0          0          0      33206   stm32f4xx_hal_cortex.o
@@ -1250,9 +1251,9 @@ Image component sizes
         28          6         24          4          0       1131   system_stm32f4xx.o
 
     ----------------------------------------------------------------------
-      3860        266        448         32       1128     721268   Object Totals
+      3860        266        448         32       1192     721272   Object Totals
          0          0         32          0          0          0   (incl. Generated)
-         8          0          0          0          0          0   (incl. Padding)
+         8          0          0          0          4          0   (incl. Padding)
 
     ----------------------------------------------------------------------
 
@@ -1295,14 +1296,14 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
 
-      5072        292        448         32       1128     718960   Grand Totals
-      5072        292        448         32       1128     718960   ELF Image Totals
+      5072        292        448         32       1192     718964   Grand Totals
+      5072        292        448         32       1192     718964   ELF Image Totals
       5072        292        448         32          0          0   ROM Totals
 
 ==============================================================================
 
     Total RO  Size (Code + RO Data)                 5520 (   5.39kB)
-    Total RW  Size (RW Data + ZI Data)              1160 (   1.13kB)
+    Total RW  Size (RW Data + ZI Data)              1224 (   1.20kB)
     Total ROM Size (Code + RO Data + RW Data)       5552 (   5.42kB)
 
 ==============================================================================

@@ -61,7 +61,7 @@ static void MX_USART3_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-#define Length 20
+#define Length 50
 
 //Transmitter Buffer
 uint8_t Tx_Buffer[Length];
@@ -93,36 +93,36 @@ void command_A(void)
 	// komut + paket sayisi + paket bytelari + crc
 	
 	// A komutu gonderilecek
-	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf(Tx_Buffer,"%c\n",'A'),1); 
+	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"%c\n",'A'),1); 
 	HAL_Delay(delay);
 	// paket sayi degeri gonderilecek
-	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf(Tx_Buffer,"%d\n",packetNumber),1);
+	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"%d\n",packetNumber),1);
 	HAL_Delay(delay);
 	// paketin bytelari sirayla gönderilecek
 	for(int i=0;i<=packetNumber-1;i++)
 	{
 		if(i == 0)
 			{
-				HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf(Tx_Buffer,"%d\n",sendPacket[i]),1);		
+				HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Device Information:\n"),1);		
 				HAL_Delay(delay);
 				//sendPacket'taki tüm paketler crc degiskeninde toplanacak 		
 			}
 		else if(i == 1)
 			{
-				HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf(Tx_Buffer,"%d\n",sendPacket[i]),1);		
+				HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Model: ARM Cortex-M4\n"),1);		
 				HAL_Delay(delay);
 				//sendPacket'taki tüm paketler crc degiskeninde toplanacak 		
 			}
 		else
 			{
-				HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf(Tx_Buffer,"%d\n",sendPacket[i]),1);		
+				HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Version Number: STM32F407VG\n"),1);		
 				HAL_Delay(delay);
 				//sendPacket'taki tüm paketler crc degiskeninde toplanacak 				
 			}
 				crc = crc + sendPacket[i]; 
 	}
 	// crc gönderilecek
-	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf(Tx_Buffer,"%d\n",crc),1);		
+	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"%d\n",crc),1);		
 	HAL_Delay(delay);
 }
 // Vrms gibi C komutundaki gönderecegimiz degerler globalde tanimli degilse hazirlanan fonksiyon;
@@ -145,21 +145,21 @@ void command_C(uint16_t P_c,uint16_t Vrms_c,uint16_t Irms_c,uint16_t pf_c,uint16
 	// komut + paket sayisi + paket bytelari + crc
 	
 	// C komutu gonderilecek
-	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf(Tx_Buffer,"%c\n",'C'),1); 
+	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"%c\n",'C'),1); 
 	HAL_Delay(delay);
 	// paket sayimiz yani 7 degeri gonderilecek
-	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf(Tx_Buffer,"%d\n",packetNumber),1);
+	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"%d\n",packetNumber),1);
 	HAL_Delay(delay);
 	// paketin bytelari sirayla gönderilecek
 	for(int i=0;i <= packetNumber-1;i++)
 		{
-			HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf(Tx_Buffer,"%d\n",sendPacket[i]),1);		
+			HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"%d\n",sendPacket[i]),1);		
 			HAL_Delay(delay);
 			//sendPacket'taki tüm paketler crc degiskeninde toplanacak 		
 			crc = crc + sendPacket[i]; 
 		}
 	// crc gönderilecek
-	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf(Tx_Buffer,"%d\n",crc),1);		
+	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"%d\n",crc),1);		
 	HAL_Delay(delay);					
 }
 
