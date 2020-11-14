@@ -1,0 +1,26 @@
+--cpu=Cortex-M4.fp.sp
+"v5_el_stm32f4\startup_stm32f407xx.o"
+"v5_el_stm32f4\main.o"
+"v5_el_stm32f4\stm32f4xx_it.o"
+"v5_el_stm32f4\stm32f4xx_hal_msp.o"
+"v5_el_stm32f4\stm32f4xx_hal_tim.o"
+"v5_el_stm32f4\stm32f4xx_hal_tim_ex.o"
+"v5_el_stm32f4\stm32f4xx_hal_uart.o"
+"v5_el_stm32f4\stm32f4xx_hal_rcc.o"
+"v5_el_stm32f4\stm32f4xx_hal_rcc_ex.o"
+"v5_el_stm32f4\stm32f4xx_hal_flash.o"
+"v5_el_stm32f4\stm32f4xx_hal_flash_ex.o"
+"v5_el_stm32f4\stm32f4xx_hal_flash_ramfunc.o"
+"v5_el_stm32f4\stm32f4xx_hal_gpio.o"
+"v5_el_stm32f4\stm32f4xx_hal_dma_ex.o"
+"v5_el_stm32f4\stm32f4xx_hal_dma.o"
+"v5_el_stm32f4\stm32f4xx_hal_pwr.o"
+"v5_el_stm32f4\stm32f4xx_hal_pwr_ex.o"
+"v5_el_stm32f4\stm32f4xx_hal_cortex.o"
+"v5_el_stm32f4\stm32f4xx_hal.o"
+"v5_el_stm32f4\stm32f4xx_hal_exti.o"
+"v5_el_stm32f4\system_stm32f4xx.o"
+--library_type=microlib --strict --scatter "v5_EL_stm32f4\v5_EL_stm32f4.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "v5_EL_stm32f4.map" -o v5_EL_stm32f4\v5_EL_stm32f4.axf
