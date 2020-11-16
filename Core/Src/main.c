@@ -76,7 +76,8 @@ char	  convertFloat[Length];
 double e      = 0;
 double value  = 0;
 double tValue = 0;
-double a = 1;
+double a = 0;
+int 	 s = 0;
 uint16_t delay = 10;
 
 // C komutu icin senaryo	
@@ -87,12 +88,6 @@ uint16_t pf    = 1;
 uint16_t f     = 50; 
 uint16_t dcCur = 5;  
 uint16_t dcVol = 30;	
-
-//B komutu parametreleri
-float const_loadCurrent  = 0;
-float const_loadResistor = 0;
-float const_loadVoltage  = 0;
-float const_loadPower    = 0;
 
 // A komutu ile kimlik bilgisi gonderimi
 void command_A(void)
@@ -141,26 +136,43 @@ void command_A(void)
 }
 
 // B komutu ile sabit mod secimi
-//void command_B(void)
-//{
-//	uint16_t sendPacket[Length];
-//	
-//	sendPacket[0] = 1;
-//	sendPacket[1] = 2;
-//	sendPacket[2] = 3;
-//	
-//	uint8_t packetNumber = 3;
-//	uint16_t crc  = 0;
-//	// komut + paket sayisi + paket bytelari + crc
-//	
-//	// A komutu gonderilecek
-//	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"%c\n",'B'),1);		
-//	HAL_Delay(delay);
-//	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"%c\n"),1);		
-//	HAL_Delay(delay);
-//	
-//}
-
+void command_B(char mode,float value)
+{
+	uint16_t sendPacket[Length];
+	
+	sendPacket[0] = 1;
+	sendPacket[1] = 2;
+	
+	uint8_t packetNumber = 2;
+	uint16_t crc  = 0;
+	// komut + paket sayisi + paket bytelari + crc
+	
+	// A komutu gonderilecek
+	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"%c\n",'B'),1); 
+	HAL_Delay(delay);
+	// paket sayi degeri gonderilecek
+	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"%d\n",packetNumber),1);
+	HAL_Delay(delay);
+	// paketin bytelari sirayla gönderilecek
+	for(int i=0;i<=packetNumber-1;i++)
+	{
+		if(i == 0)
+			{
+				HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Selected Mode:%c\n",mode),1);		
+				HAL_Delay(delay);
+				//sendPacket'taki tüm paketler crc degiskeninde toplanacak 		
+			}
+		else
+			{
+				HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Selected Value:%.3f\n",value),1);		
+				HAL_Delay(delay);
+			}
+				crc = crc + sendPacket[i]; 
+	}
+	// crc gönderilecek
+	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"%d\n",crc),1);		
+	HAL_Delay(delay);
+}
 // Vrms gibi C komutundaki gönderecegimiz degerler globalde tanimli degilse hazirlanan fonksiyon;
 void command_C(uint16_t P_c,uint16_t Vrms_c,uint16_t Irms_c,uint16_t pf_c,uint16_t f_c,uint16_t dcCur_c,uint16_t dcVol_c)
 {
@@ -224,6 +236,7 @@ float chartoInt(char x)
 		case '7': e = 7 ;break;
 		case '8': e = 8 ;break;
 		case '9': e = 9 ;break;		
+		default:break;
 	}
 	return e;
 }
@@ -265,7 +278,7 @@ int main(void)
 	lcd_init();
 	lcd_send_cmd (0x80|0x40);
 	lcd_send_string("This Is Test Code");
-	HAL_Delay(2000);
+	HAL_Delay(1000);
 	lcd_clear();
 
   /* USER CODE END 2 */
@@ -298,13 +311,18 @@ int main(void)
 		// arayüzden A komutu geldiginde
 		if(Rx_Buffer[0] == 'A')
 			{	
-				HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12,GPIO_PIN_SET);
-				command_A();
-				Rx_Buffer[0] = 0;
 				lcd_clear();
 				lcd_send_cmd (0x80|0x00);
 				lcd_send_string("Selected Command:");
-				lcd_send_string(Rx_Buffer);
+				lcd_send_string(Rx_Buffer);				
+				HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12,GPIO_PIN_SET);
+				command_A();	
+				lcd_send_cmd (0x80|0x14);
+				lcd_send_string("      -Sended-");
+			  lcd_send_cmd (0x80|0x54);
+				lcd_send_string("   Model & Version");
+				HAL_Delay(3000);
+				Rx_Buffer[0] = 0;
 			}
 				
 		// arayüzden B komutu geldiginde		
@@ -363,15 +381,41 @@ int main(void)
 
 						for(int k=0;k<=Length;k++)
 							{
-								value = chartoInt(Rx_B_Buffer[k]);
-								tValue = tValue + value;
 								if(Rx_B_Buffer[k] == '.')
 									{
-										value = chartoInt(Rx_B_Buffer[k+1]);
-										value = value / pow(value,a);
-										tValue = tValue + value;
+										a = k;
 									}
 							}
+							
+						s = strlen(Rx_B_Buffer);
+						HAL_Delay(1);
+						//tam sayi olma durumu							
+						if(a == 0)
+						{
+
+							for(int k=1;k<=s;k++)
+								{									
+									value = chartoInt(Rx_B_Buffer[k-1]);
+									value = value * pow(10,s-k);
+									tValue = tValue + value;								  					
+								}
+						}
+						// tam sayi olmama durumu						
+						if(a != 0)
+						{
+							for(int k=1;k<=s-a-1;k++)
+								{									
+									value = chartoInt(Rx_B_Buffer[k-1]);
+									value = value * pow(10,s-a-k-1);
+									tValue = tValue + value;								  					
+								}
+						  for(int k=a+1;k<=s-1;k++)
+								{									
+									value = chartoInt(Rx_B_Buffer[k]);
+									value = value / pow(10,k-a);
+									tValue = tValue + value;								  					
+								}
+						}
 						break;
 					}
 					else
@@ -385,11 +429,11 @@ int main(void)
 				lcd_send_string("Selected Value:");
 				lcd_send_cmd (0x80|0x54);
 				lcd_send_string(Rx_B_Buffer);
-				HAL_Delay(2000);
+				HAL_Delay(1000);
+//				command_B(Rx_B_Data[1],tValue);		
 				tValue = 0;
 				value = 0;
-				bufferClean();
-				//command_B();		
+				bufferClean();				
 			}	
 			
 		// arayüzden C komutu geldiginde		
@@ -425,7 +469,7 @@ int main(void)
 			}
 
     /* USER CODE END WHILE */
-
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15, GPIO_PIN_RESET);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
