@@ -430,7 +430,7 @@ int main(void)
 				lcd_send_cmd (0x80|0x54);
 				lcd_send_string(Rx_B_Buffer);
 				HAL_Delay(1000);
-//				command_B(Rx_B_Data[1],tValue);		
+				command_B(Rx_B_Data[1],tValue);		
 				tValue = 0;
 				value = 0;
 				bufferClean();				
