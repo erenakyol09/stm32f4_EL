@@ -26,9 +26,13 @@ v5_el_stm32f4\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_cortex.h
 v5_el_stm32f4\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h
 v5_el_stm32f4\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h
 v5_el_stm32f4\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h
+v5_el_stm32f4\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c.h
+v5_el_stm32f4\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c_ex.h
 v5_el_stm32f4\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h
 v5_el_stm32f4\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
 v5_el_stm32f4\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 v5_el_stm32f4\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 v5_el_stm32f4\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 v5_el_stm32f4\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+v5_el_stm32f4\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
+v5_el_stm32f4\main.o: ../Core/Inc/i2c-lcd.h

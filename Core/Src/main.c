@@ -20,12 +20,13 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
+#include "i2c-lcd.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,6 +45,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+I2C_HandleTypeDef hi2c1;
+
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
@@ -54,6 +57,7 @@ UART_HandleTypeDef huart3;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART3_UART_Init(void);
+static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -65,11 +69,17 @@ static void MX_USART3_UART_Init(void);
 
 //Transmitter Buffer
 uint8_t Tx_Buffer[Length];
-uint8_t Rx_Buffer[Length];
-
+char 		Rx_Buffer[Length];
+char 		Rx_B_Buffer[Length];
+char 		Rx_B_Data[Length];
+char	  convertFloat[Length];
+double e      = 0;
+double value  = 0;
+double tValue = 0;
+double a = 1;
 uint16_t delay = 10;
 
-// senaryo	
+// C komutu icin senaryo	
 uint16_t P     = 200;
 uint16_t Vrms  = 220;
 uint16_t Irms  = 1;  
@@ -77,16 +87,21 @@ uint16_t pf    = 1;
 uint16_t f     = 50; 
 uint16_t dcCur = 5;  
 uint16_t dcVol = 30;	
-	
-	
+
+//B komutu parametreleri
+float const_loadCurrent  = 0;
+float const_loadResistor = 0;
+float const_loadVoltage  = 0;
+float const_loadPower    = 0;
+
 // A komutu ile kimlik bilgisi gonderimi
 void command_A(void)
 {
 	uint16_t sendPacket[Length];
 	
-	sendPacket[0] = 0;
-	sendPacket[1] = 1;
-	sendPacket[2] = 2;
+	sendPacket[0] = 1;
+	sendPacket[1] = 2;
+	sendPacket[2] = 3;
 	
 	uint8_t packetNumber = 3;
 	uint16_t crc  = 0;
@@ -109,13 +124,13 @@ void command_A(void)
 			}
 		else if(i == 1)
 			{
-				HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Model: ARM Cortex-M4\n"),1);		
+				HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Model:ARM Cortex-M4\n"),1);		
 				HAL_Delay(delay);
 				//sendPacket'taki tüm paketler crc degiskeninde toplanacak 		
 			}
 		else
 			{
-				HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Version Number: STM32F407VG\n"),1);		
+				HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"VersionNum:STM32F407VG\n"),1);		
 				HAL_Delay(delay);
 			}
 				crc = crc + sendPacket[i]; 
@@ -124,6 +139,28 @@ void command_A(void)
 	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"%d\n",crc),1);		
 	HAL_Delay(delay);
 }
+
+// B komutu ile sabit mod secimi
+//void command_B(void)
+//{
+//	uint16_t sendPacket[Length];
+//	
+//	sendPacket[0] = 1;
+//	sendPacket[1] = 2;
+//	sendPacket[2] = 3;
+//	
+//	uint8_t packetNumber = 3;
+//	uint16_t crc  = 0;
+//	// komut + paket sayisi + paket bytelari + crc
+//	
+//	// A komutu gonderilecek
+//	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"%c\n",'B'),1);		
+//	HAL_Delay(delay);
+//	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"%c\n"),1);		
+//	HAL_Delay(delay);
+//	
+//}
+
 // Vrms gibi C komutundaki gönderecegimiz degerler globalde tanimli degilse hazirlanan fonksiyon;
 void command_C(uint16_t P_c,uint16_t Vrms_c,uint16_t Irms_c,uint16_t pf_c,uint16_t f_c,uint16_t dcCur_c,uint16_t dcVol_c)
 {
@@ -161,6 +198,35 @@ void command_C(uint16_t P_c,uint16_t Vrms_c,uint16_t Irms_c,uint16_t pf_c,uint16
 	HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"%d\n",crc),1);		
 	HAL_Delay(delay);					
 }
+void bufferClean(void)
+{
+	for(int o=0;o<=Length;o++)
+		{
+			Rx_B_Buffer[o] = 0;
+		}	
+	for(int o=0;o<=Length;o++)
+		{
+			Rx_Buffer[o] = 0;
+		}	
+}
+
+float chartoInt(char x)
+{
+	switch(x)
+	{
+		case '0': e = 0 ;break;
+		case '1': e = 1 ;break;
+		case '2': e = 2 ;break;
+		case '3': e = 3 ;break;
+		case '4': e = 4 ;break;
+		case '5': e = 5 ;break;
+		case '6': e = 6 ;break;
+		case '7': e = 7 ;break;
+		case '8': e = 8 ;break;
+		case '9': e = 9 ;break;		
+	}
+	return e;
+}
 
 /* USER CODE END 0 */
 
@@ -194,31 +260,170 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART3_UART_Init();
-	
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+	lcd_init();
+	lcd_send_cmd (0x80|0x40);
+	lcd_send_string("This Is Test Code");
+	HAL_Delay(2000);
+	lcd_clear();
 
-	
-  /* USER CODE END 2 */		
-	
-	/* Infinite loop */
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {		
 		
 		//Arayüzden Komut Bekliyoruz
-		HAL_UART_Receive(&huart3,Rx_Buffer,10,1);			
+		HAL_UART_Receive(&huart3,(uint8_t*)Rx_Buffer,Length,1000);			
+		HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Waitting For Command\n"),1);
 		HAL_Delay(delay);
-		
-		// arayüzden C komutu geldiginde;
-		
+		lcd_clear();
+	  lcd_send_cmd (0x80|0x00);
+		lcd_send_string("Enter Command:");
+		lcd_send_string(Rx_Buffer);
+		lcd_send_cmd (0x80|0x40);
+		lcd_send_string("A: Model");
+		lcd_send_cmd (0x80|0x14);
+		lcd_send_string("B: Mode");
+		lcd_send_cmd (0x80|0x54);
+		lcd_send_string("C: Efficiency");
+		HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Commands:A,B,C\n"),1);
+		HAL_Delay(delay);
+
+			
+
+
+		// arayüzden A komutu geldiginde
+		if(Rx_Buffer[0] == 'A')
+			{	
+				HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12,GPIO_PIN_SET);
+				command_A();
+				Rx_Buffer[0] = 0;
+				lcd_clear();
+				lcd_send_cmd (0x80|0x00);
+				lcd_send_string("Selected Command:");
+				lcd_send_string(Rx_Buffer);
+			}
+				
+		// arayüzden B komutu geldiginde		
+		if(Rx_Buffer[0] == 'B')
+			{	
+				lcd_clear();
+				lcd_send_cmd (0x80|0x00);
+				lcd_send_string("Selected Command:");
+				lcd_send_string(Rx_Buffer);
+																												//Gelen datalari  Rx_B_Data adli dizide toplayacagiz
+				//0. indekse 'B' yazilacak
+				Rx_B_Data[0] = Rx_Buffer[0];
+				Rx_Buffer[0] = 0;
+				HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13,GPIO_PIN_SET);
+				
+				HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Select Mode:\n"),1); 
+				HAL_Delay(delay);
+				
+				while(1)
+				{
+					HAL_UART_Receive(&huart3,(uint8_t*)Rx_B_Buffer,Length,1);
+
+					if(Rx_B_Buffer[0] == 'I' || Rx_B_Buffer[0] == 'R' || Rx_B_Buffer[0] == 'V' || Rx_B_Buffer[0] == 'P')					
+					{
+						lcd_send_cmd (0x80|0x40);
+						lcd_send_string("Selected Mode:");
+						lcd_send_string(Rx_B_Buffer);
+						break;
+					}
+					else
+					{
+						HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Please Select Mode\n"),10); 
+						HAL_Delay(100);
+						HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Cur:I Res:R\n"),10); 
+						HAL_Delay(1000);
+						HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Volt:V Pow:P\n"),10); 
+						HAL_Delay(1000);
+					}
+				}
+				//1. indekse secilen mod yazilacak
+				Rx_B_Data[1] = Rx_B_Buffer[0];
+				HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Selected Mode:\n"),1);
+				HAL_Delay(delay);
+				HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Const %c Mode\n",Rx_B_Buffer[0]),1);
+				HAL_Delay(delay);
+				
+				HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Enter Value:\n"),1); 
+				HAL_Delay(delay);
+
+				while(1)
+				{
+					HAL_UART_Receive(&huart3,(uint8_t*)Rx_B_Buffer,Length,1000);
+					
+					if(Rx_B_Buffer[0] != Rx_B_Data[1])					
+					{
+
+						for(int k=0;k<=Length;k++)
+							{
+								value = chartoInt(Rx_B_Buffer[k]);
+								tValue = tValue + value;
+								if(Rx_B_Buffer[k] == '.')
+									{
+										value = chartoInt(Rx_B_Buffer[k+1]);
+										value = value / pow(value,a);
+										tValue = tValue + value;
+									}
+							}
+						break;
+					}
+					else
+					{
+						HAL_UART_Transmit(&huart3,Tx_Buffer,sprintf((char *)Tx_Buffer,"Please Enter Value\n"),10); 
+						HAL_Delay(100);
+					}
+				}
+				
+				lcd_send_cmd (0x80|0x14);
+				lcd_send_string("Selected Value:");
+				lcd_send_cmd (0x80|0x54);
+				lcd_send_string(Rx_B_Buffer);
+				HAL_Delay(2000);
+				tValue = 0;
+				value = 0;
+				bufferClean();
+				//command_B();		
+			}	
+			
+		// arayüzden C komutu geldiginde		
 	  if(Rx_Buffer[0] == 'C')
-		{	
-			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12,GPIO_PIN_SET);
-			command_C(P,Vrms,Irms,pf,f,dcCur,dcVol);			
-		}
-		
-		
-		
+			{	
+				lcd_clear();
+				lcd_send_cmd (0x80|0x00);
+				lcd_send_string("Selected Command:");
+				lcd_send_string(Rx_Buffer);
+				
+				HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14,GPIO_PIN_SET);		
+				
+				while(1)
+				{
+					HAL_UART_Receive(&huart3,(uint8_t*)Rx_Buffer,Length,1);
+					
+					lcd_send_cmd (0x80|0x14);
+					lcd_send_string("  -SENDING DATA-  ");
+					lcd_send_cmd (0x80|0x54);
+					lcd_send_string("  Send X to exit");
+					
+					
+					if(Rx_Buffer[0] == 'X')					
+					{
+						break;
+					}
+					else
+					{						
+						command_C(P,Vrms,Irms,pf,f,dcCur,dcVol);	
+					}
+				}
+				bufferClean();
+			}
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -245,7 +450,12 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLN = 168;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -254,15 +464,49 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
 }
 
 /**
